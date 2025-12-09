@@ -1,18 +1,109 @@
-import React, { useState } from 'react';
-import './App.css'; // Crearemos este archivo para los estilos
+import React, { useState, useEffect } from 'react';
+import Sidebar from './components/Sidebar';
+import ChatArea from './components/ChatArea';
+import './App.css';
 
 function App() {
+  const [conversations, setConversations] = useState([]);
+  const [activeConversation, setActiveConversation] = useState(-1);
   const [messages, setMessages] = useState([]);
-  const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [userName] = useState('Usuario');
 
-  const handleSendMessage = async () => {
-    if (inputValue.trim() === '') return;
+  // Cargar conversaciones desde localStorage al iniciar
+  useEffect(() => {
+    const savedConversations = localStorage.getItem('chatConversations');
+    if (savedConversations) {
+      setConversations(JSON.parse(savedConversations));
+    }
+  }, []);
 
-    const userMessage = { sender: 'user', text: inputValue };
-    // Añadimos el mensaje del usuario a la UI inmediatamente
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
-    setInputValue(''); // Limpiamos el input
+  // Guardar conversaciones en localStorage cuando cambian
+  useEffect(() => {
+    localStorage.setItem('chatConversations', JSON.stringify(conversations));
+  }, [conversations]);
+
+  // Guardar mensajes en la conversación activa cuando cambian
+  useEffect(() => {
+    if (activeConversation >= 0 && messages.length > 0) {
+      const updatedConversations = [...conversations];
+      updatedConversations[activeConversation] = {
+        ...updatedConversations[activeConversation],
+        messages: messages
+      };
+      setConversations(updatedConversations);
+    }
+  }, [messages, activeConversation, conversations]);
+
+  const handleNewChat = () => {
+    // Guardar la conversación actual si tiene mensajes
+    if (messages.length > 0 && activeConversation >= 0) {
+      const updatedConversations = [...conversations];
+      updatedConversations[activeConversation] = {
+        ...updatedConversations[activeConversation],
+        messages: messages
+      };
+      setConversations(updatedConversations);
+    }
+
+    // Crear nueva conversación
+    const newConversation = {
+      title: 'Nueva conversación',
+      date: new Date().toLocaleDateString(),
+      messages: []
+    };
+
+    setConversations([newConversation, ...conversations]);
+    setActiveConversation(0);
+    setMessages([]);
+  };
+
+  const handleSelectConversation = (index) => {
+    // Guardar la conversación actual si tiene mensajes
+    if (messages.length > 0 && activeConversation >= 0) {
+      const updatedConversations = [...conversations];
+      updatedConversations[activeConversation] = {
+        ...updatedConversations[activeConversation],
+        messages: messages
+      };
+      setConversations(updatedConversations);
+    }
+
+    // Cargar la conversación seleccionada
+    setActiveConversation(index);
+    setMessages(conversations[index].messages || []);
+  };
+
+  const handleSendMessage = async (messageText) => {
+    const userMessage = { sender: 'user', text: messageText };
+
+    // Si no hay una conversación activa, crear una nueva primero
+    if (activeConversation === -1) {
+      const newConversation = {
+        title: messageText.substring(0, 30) + (messageText.length > 30 ? '...' : ''),
+        date: new Date().toLocaleDateString(),
+        messages: [userMessage]
+      };
+
+      setConversations([newConversation, ...conversations]);
+      setActiveConversation(0);
+      setMessages([userMessage]);
+    } else {
+      // Añadimos el mensaje del usuario a la UI inmediatamente
+      const updatedMessages = [...messages, userMessage];
+      setMessages(updatedMessages);
+
+      // Actualizar el título de la conversación con el primer mensaje
+      if (messages.length === 0) {
+        const updatedConversations = [...conversations];
+        updatedConversations[activeConversation] = {
+          ...updatedConversations[activeConversation],
+          title: messageText.substring(0, 30) + (messageText.length > 30 ? '...' : '')
+        };
+        setConversations(updatedConversations);
+      }
+    }
+
     setIsLoading(true);
 
     try {
@@ -22,7 +113,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: inputValue }),
+        body: JSON.stringify({ message: messageText }),
       });
 
       if (!response.ok) {
@@ -45,27 +136,19 @@ function App() {
   };
 
   return (
-    <div className="chat-container">
-      <div className="messages">
-        {messages.map((msg, index) => (
-          <div key={index} className={`message ${msg.sender}`}>
-            <p>{msg.text}</p>
-          </div>
-        ))}
-        {isLoading && <div className="message assistant"><p>Escribiendo...</p></div>}
-      </div>
-      <div className="input-area">
-        <input
-          type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-          placeholder="Escribe tu mensaje..."
-        />
-        <button onClick={handleSendMessage} disabled={isLoading}>
-          Enviar
-        </button>
-      </div>
+    <div className="app">
+      <Sidebar
+        conversations={conversations}
+        activeConversation={activeConversation}
+        onNewChat={handleNewChat}
+        onSelectConversation={handleSelectConversation}
+        userName={userName}
+      />
+      <ChatArea
+        messages={messages}
+        onSendMessage={handleSendMessage}
+        isLoading={isLoading}
+      />
     </div>
   );
 }
