@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import './ChatArea.css';
 
 const ChatArea = ({ messages, onSendMessage, isLoading }) => {
@@ -46,7 +48,13 @@ const ChatArea = ({ messages, onSendMessage, isLoading }) => {
                                     </div>
                                 )}
                                 <div className="message-text">
-                                    <p>{msg.text}</p>
+                                    {msg.sender === 'assistant' ? (
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                            {msg.text}
+                                        </ReactMarkdown>
+                                    ) : (
+                                        <p>{msg.text}</p>
+                                    )}
                                 </div>
                                 {msg.sender === 'user' && (
                                     <div className="avatar user-avatar">
