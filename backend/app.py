@@ -12,7 +12,7 @@ CEREBRAS_URL = "https://api.cerebras.ai/v1/chat/completions"
 # --- CREAR LA APLICACIÓN DE FLASK ---
 app = Flask(__name__)
 # Habilitar CORS para todas las rutas
-CORS(app) 
+CORS(app)
 
 # --- HISTORIAL DE CONVERSACIÓN ---
 historial_conversacion = [
@@ -22,12 +22,13 @@ historial_conversacion = [
     }
 ]
 
+
 # --- DEFINIR UN ENDPOINT (Ruta de la API) ---
-@app.route('/chat', methods=['POST'])
+@app.route("/chat", methods=["POST"])
 def chat():
     # 1. Obtener el mensaje del usuario desde la petición del frontend
     data = request.json
-    user_message = data.get('message')
+    user_message = data.get("message")
 
     if not user_message:
         return jsonify({"error": "El mensaje es requerido"}), 400
@@ -41,15 +42,17 @@ def chat():
             url=CEREBRAS_URL,
             headers={
                 "Authorization": f"Bearer {API_KEY}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             },
-            data=json.dumps({
-                "model": "zai-glm-4.6",
-                "messages": historial_conversacion,
-            }),
+            data=json.dumps(
+                {
+                    "model": "zai-glm-4.6",
+                    "messages": historial_conversacion,
+                }
+            ),
             timeout=30,
         )
-        response.raise_for_status() # Lanza un error para códigos de estado 4xx/5xx
+        response.raise_for_status()  # Lanza un error para códigos de estado 4xx/5xx
     except requests.exceptions.RequestException as e:
         print(f"Error de conexión con la API de Cerebras: {e}")
         return jsonify({"error": "No se pudo conectar con el servicio de IA"}), 500
@@ -58,13 +61,24 @@ def chat():
     respuesta_asistente = response.json()["choices"][0]["message"]["content"]
 
     # 5. Añadir la respuesta del asistente al historial
-    historial_conversacion.append(
-        {"role": "assistant", "content": respuesta_asistente}
-    )
+    historial_conversacion.append({"role": "assistant", "content": respuesta_asistente})
 
     # 6. Devolver la respuesta al frontend en formato JSON
     return jsonify({"reply": respuesta_asistente})
 
+
+@app.route("/clear_chat", methods=["POST"])
+def clear_chat():
+    global historial_conversacion
+    historial_conversacion = [
+        {
+            "role": "system",
+            "content": "Eres un asistente útil y amigable que mantiene una conversación fluida.",
+        }
+    ]
+    return jsonify({"message": "Historial de conversación borrado"})
+
+
 # --- PUNTO DE ENTRADA PARA EJECUTAR EL SERVIDOR ---
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True, port=5000)

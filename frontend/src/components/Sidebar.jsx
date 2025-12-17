@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Sidebar.css';
 
-const Sidebar = ({ conversations, activeConversation, onNewChat, onSelectConversation, userName }) => {
+const Sidebar = ({ conversations, activeConversation, onNewChat, onSelectConversation, onDeleteConversation, userName }) => {
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
     const toggleUserMenu = () => {
@@ -30,8 +30,22 @@ const Sidebar = ({ conversations, activeConversation, onNewChat, onSelectConvers
                             className={`conversation-item ${activeConversation === index ? 'active' : ''}`}
                             onClick={() => onSelectConversation(index)}
                         >
-                            <div className="conversation-title">{conversation.title}</div>
-                            <div className="conversation-date">{conversation.date}</div>
+                            <div className="conversation-content">
+                                <div className="conversation-title">{conversation.title}</div>
+                                <div className="conversation-date">{conversation.date}</div>
+                            </div>
+                            <button
+                                className="delete-conversation-btn"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDeleteConversation(index);
+                                }}
+                                title="Borrar conversación"
+                            >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </button>
                         </div>
                     ))
                 )}

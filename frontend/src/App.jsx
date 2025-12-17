@@ -74,6 +74,40 @@ function App() {
     setMessages(conversations[index].messages || []);
   };
 
+  const handleDeleteConversation = async (index) => {
+    // Confirmar eliminación
+    if (!window.confirm('¿Estás seguro de que quieres borrar esta conversación?')) {
+      return;
+    }
+
+    // Si es la conversación activa, resetear
+    if (activeConversation === index) {
+      setActiveConversation(-1);
+      setMessages([]);
+    }
+
+    // Eliminar la conversación
+    const updatedConversations = conversations.filter((_, i) => i !== index);
+    setConversations(updatedConversations);
+
+    // Ajustar el índice activo si es necesario
+    if (activeConversation > index) {
+      setActiveConversation(activeConversation - 1);
+    }
+
+    // Limpiar el historial en el backend
+    try {
+      await fetch('http://127.0.0.1:5000/clear_chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    } catch (error) {
+      console.error('Error al limpiar el historial del backend:', error);
+    }
+  };
+
   const handleSendMessage = async (messageText) => {
     const userMessage = { sender: 'user', text: messageText };
 
@@ -142,6 +176,7 @@ function App() {
         activeConversation={activeConversation}
         onNewChat={handleNewChat}
         onSelectConversation={handleSelectConversation}
+        onDeleteConversation={handleDeleteConversation}
         userName={userName}
       />
       <ChatArea
