@@ -24,16 +24,20 @@ function App() {
   }, [conversations]);
 
   // Guardar mensajes en la conversación activa cuando cambian
+  // (usar update funcional para evitar loops y estados stale)
   useEffect(() => {
-    if (activeConversation >= 0 && messages.length > 0) {
-      const updatedConversations = [...conversations];
-      updatedConversations[activeConversation] = {
-        ...updatedConversations[activeConversation],
-        messages: messages
+    if (activeConversation < 0) return;
+
+    setConversations((prev) => {
+      if (!prev[activeConversation]) return prev;
+      const next = [...prev];
+      next[activeConversation] = {
+        ...next[activeConversation],
+        messages: messages,
       };
-      setConversations(updatedConversations);
-    }
-  }, [messages, activeConversation, conversations]);
+      return next;
+    });
+  }, [messages, activeConversation]);
 
   const handleNewChat = () => {
     // Guardar la conversación actual si tiene mensajes
@@ -94,22 +98,28 @@ function App() {
     if (activeConversation > index) {
       setActiveConversation(activeConversation - 1);
     }
+  };
 
-    // Limpiar el historial en el backend
-    try {
-      await fetch('http://127.0.0.1:5000/clear_chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-    } catch (error) {
-      console.error('Error al limpiar el historial del backend:', error);
-    }
+  const handleRenameConversation = (index, newTitle) => {
+    const title = (newTitle || '').trim();
+    if (!title) return;
+
+    const updatedConversations = [...conversations];
+    if (!updatedConversations[index]) return;
+
+    updatedConversations[index] = {
+      ...updatedConversations[index],
+      title,
+    };
+    setConversations(updatedConversations);
   };
 
   const handleSendMessage = async (messageText) => {
     const userMessage = { sender: 'user', text: messageText };
+
+    // Historial *antes* de añadir el nuevo mensaje.
+    // El backend construye el contexto a partir de este historial.
+    const historyForBackend = activeConversation === -1 ? [] : messages;
 
     // Si no hay una conversación activa, crear una nueva primero
     if (activeConversation === -1) {
@@ -147,7 +157,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: messageText }),
+        body: JSON.stringify({ message: messageText, history: historyForBackend }),
       });
 
       if (!response.ok) {
@@ -177,6 +187,7 @@ function App() {
         onNewChat={handleNewChat}
         onSelectConversation={handleSelectConversation}
         onDeleteConversation={handleDeleteConversation}
+        onRenameConversation={handleRenameConversation}
         userName={userName}
       />
       <ChatArea

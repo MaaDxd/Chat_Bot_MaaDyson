@@ -64,6 +64,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    position: relative;
 }
 
 .conversation-item:hover {
@@ -92,24 +93,87 @@
     color: #8e8ea0;
 }
 
-.delete-conversation-btn {
+.conversation-rename-input {
+    width: 100%;
+    background-color: #2a2b32;
+    border: 1px solid #565869;
+    color: #ececf1;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 14px;
+    outline: none;
+}
+
+.conversation-rename-input:focus {
+    border-color: #7a7d8f;
+}
+
+.conversation-menu-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.conversation-menu-btn {
     background: none;
     border: none;
     color: #8e8ea0;
     cursor: pointer;
-    padding: 4px;
-    border-radius: 3px;
+    padding: 6px;
+    border-radius: 6px;
     opacity: 0;
-    transition: opacity 0.2s, background-color 0.2s;
+    transition: opacity 0.2s, background-color 0.2s, color 0.2s;
 }
 
-.conversation-item:hover .delete-conversation-btn {
+.conversation-item:hover .conversation-menu-btn,
+.conversation-item.active .conversation-menu-btn {
     opacity: 1;
 }
 
-.delete-conversation-btn:hover {
+.conversation-menu-btn:hover {
     background-color: #444654;
     color: #ececf1;
+}
+
+.conversation-menu {
+    position: absolute;
+    right: 0;
+    top: 34px;
+    min-width: 170px;
+    background-color: #2a2b32;
+    border: 1px solid #444654;
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 1000;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.conversation-menu-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 14px;
+    color: #ececf1;
+    transition: background-color 0.2s;
+}
+
+.conversation-menu-item:hover {
+    background-color: #343541;
+}
+
+.conversation-menu-item.danger {
+    color: #ffb4b4;
+}
+
+.menu-icon {
+    display: inline-flex;
+    color: currentColor;
 }
 
 .user-menu {
