@@ -36,6 +36,7 @@
 .conversations-list {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 0 12px;
 }
 
@@ -77,6 +78,7 @@
 
 .conversation-content {
     flex: 1;
+    min-width: 0;
 }
 
 .conversation-title {

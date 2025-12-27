@@ -1,18 +1,18 @@
- import React, { useState, useEffect } from 'react';
-import Sidebar from './components/Sidebar';
-import ChatArea from './components/ChatArea';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import Sidebar from "./components/Sidebar";
+import ChatArea from "./components/ChatArea";
+import "./App.css";
 
 function App() {
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(-1);
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [userName] = useState('Usuario');
+  const [userName] = useState("Usuario");
 
   // Cargar conversaciones desde localStorage al iniciar
   useEffect(() => {
-    const savedConversations = localStorage.getItem('chatConversations');
+    const savedConversations = localStorage.getItem("chatConversations");
     if (savedConversations) {
       setConversations(JSON.parse(savedConversations));
     }
@@ -20,7 +20,7 @@ function App() {
 
   // Guardar conversaciones en localStorage cuando cambian
   useEffect(() => {
-    localStorage.setItem('chatConversations', JSON.stringify(conversations));
+    localStorage.setItem("chatConversations", JSON.stringify(conversations));
   }, [conversations]);
 
   // Guardar mensajes en la conversación activa cuando cambian
@@ -45,16 +45,16 @@ function App() {
       const updatedConversations = [...conversations];
       updatedConversations[activeConversation] = {
         ...updatedConversations[activeConversation],
-        messages: messages
+        messages: messages,
       };
       setConversations(updatedConversations);
     }
 
     // Crear nueva conversación
     const newConversation = {
-      title: 'Nueva conversación',
+      title: "Nueva conversación",
       date: new Date().toLocaleDateString(),
-      messages: []
+      messages: [],
     };
 
     setConversations([newConversation, ...conversations]);
@@ -68,7 +68,7 @@ function App() {
       const updatedConversations = [...conversations];
       updatedConversations[activeConversation] = {
         ...updatedConversations[activeConversation],
-        messages: messages
+        messages: messages,
       };
       setConversations(updatedConversations);
     }
@@ -80,7 +80,9 @@ function App() {
 
   const handleDeleteConversation = async (index) => {
     // Confirmar eliminación
-    if (!window.confirm('¿Estás seguro de que quieres borrar esta conversación?')) {
+    if (
+      !window.confirm("¿Estás seguro de que quieres borrar esta conversación?")
+    ) {
       return;
     }
 
@@ -101,7 +103,7 @@ function App() {
   };
 
   const handleRenameConversation = (index, newTitle) => {
-    const title = (newTitle || '').trim();
+    const title = (newTitle || "").trim();
     if (!title) return;
 
     const updatedConversations = [...conversations];
@@ -115,7 +117,7 @@ function App() {
   };
 
   const handleSendMessage = async (messageText) => {
-    const userMessage = { sender: 'user', text: messageText };
+    const userMessage = { sender: "user", text: messageText };
 
     // Historial *antes* de añadir el nuevo mensaje.
     // El backend construye el contexto a partir de este historial.
@@ -124,9 +126,10 @@ function App() {
     // Si no hay una conversación activa, crear una nueva primero
     if (activeConversation === -1) {
       const newConversation = {
-        title: messageText.substring(0, 30) + (messageText.length > 30 ? '...' : ''),
+        title:
+          messageText.substring(0, 30) + (messageText.length > 30 ? "..." : ""),
         date: new Date().toLocaleDateString(),
-        messages: [userMessage]
+        messages: [userMessage],
       };
 
       setConversations([newConversation, ...conversations]);
@@ -142,7 +145,9 @@ function App() {
         const updatedConversations = [...conversations];
         updatedConversations[activeConversation] = {
           ...updatedConversations[activeConversation],
-          title: messageText.substring(0, 30) + (messageText.length > 30 ? '...' : '')
+          title:
+            messageText.substring(0, 30) +
+            (messageText.length > 30 ? "..." : ""),
         };
         setConversations(updatedConversations);
       }
@@ -152,31 +157,50 @@ function App() {
 
     try {
       // Hacemos la petición a NUESTRO backend
-      const response = await fetch('http://127.0.0.1:5000/chat', {
-        method: 'POST',
+      const response = await fetch("http://127.0.0.1:5000/chat", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: messageText, history: historyForBackend }),
+        body: JSON.stringify({
+          message: messageText,
+          history: historyForBackend,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Error en la respuesta del servidor');
+        throw new Error("Error en la respuesta del servidor");
       }
 
       const data = await response.json();
-      const assistantMessage = { sender: 'assistant', text: data.reply };
+      const assistantMessage = {
+        sender: "assistant",
+        text: data.reply,
+        shouldAnimate: true,
+      };
 
       // Añadimos la respuesta del asistente
       setMessages((prevMessages) => [...prevMessages, assistantMessage]);
-
     } catch (error) {
       console.error("Hubo un error al contactar al backend:", error);
-      const errorMessage = { sender: 'assistant', text: 'Lo siento, tuve un problema al procesar tu solicitud.' };
+      const errorMessage = {
+        sender: "assistant",
+        text: "Lo siento, tuve un problema al procesar tu solicitud.",
+      };
       setMessages((prevMessages) => [...prevMessages, errorMessage]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleAnimationComplete = (index) => {
+    setMessages((prev) => {
+      const next = [...prev];
+      if (next[index]) {
+        next[index] = { ...next[index], shouldAnimate: false };
+      }
+      return next;
+    });
   };
 
   return (
@@ -194,6 +218,7 @@ function App() {
         messages={messages}
         onSendMessage={handleSendMessage}
         isLoading={isLoading}
+        onAnimationComplete={handleAnimationComplete}
       />
     </div>
   );
