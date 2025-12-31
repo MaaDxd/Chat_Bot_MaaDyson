@@ -45,7 +45,7 @@ function App() {
       const updatedConversations = [...conversations];
       updatedConversations[activeConversation] = {
         ...updatedConversations[activeConversation],
-        messages: messages,
+        messages: messages.map((m) => ({ ...m, shouldAnimate: false })),
       };
       setConversations(updatedConversations);
     }
@@ -68,7 +68,7 @@ function App() {
       const updatedConversations = [...conversations];
       updatedConversations[activeConversation] = {
         ...updatedConversations[activeConversation],
-        messages: messages,
+        messages: messages.map((m) => ({ ...m, shouldAnimate: false })),
       };
       setConversations(updatedConversations);
     }
