@@ -11,6 +11,8 @@ Proyecto de chatbot con frontend en React y backend en Flask.
 - Historial de conversación
 - Soporte para Markdown en mensajes
 - Interfaz moderna con sidebar
+- Borrar conversaciones individuales
+- Limpiar historial de chat
 
 ## Dependencias
 ### Frontend (React)
@@ -25,9 +27,18 @@ Proyecto de chatbot con frontend en React y backend en Flask.
 
 ## API Configuration
 - Usa Cerebras AI API (zai-glm-4.6 model)
-- Endpoint: `/chat` (POST)
+- Endpoints:
+  - `/chat` (POST): Enviar mensaje y recibir respuesta
+  - `/clear_chat` (POST): Limpiar historial de conversación
 - Puerto: 5000
 
 ## Iniciar el Proyecto
-1. Frontend: `cd frontend && npm install && npm start` (puerto 3000)
-2. Backend: `cd backend && python app.py` (puerto 5000)
+1. Backend: `cd backend && python app.py` (puerto 5000)
+2. Frontend: `cd frontend && npm install && npm start` (puerto 3000 o siguiente disponible)
+
+## Uso
+- Abre el navegador en http://localhost:3000 (o el puerto asignado)
+- Crea una nueva conversación o selecciona una existente
+- Escribe mensajes y recibe respuestas de la IA
+- Usa el botón X en la sidebar para borrar conversaciones
+- El historial se guarda automáticamente en localStorage
