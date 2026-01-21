@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+ import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
 import './App.css';
@@ -24,16 +24,20 @@ function App() {
   }, [conversations]);
 
   // Guardar mensajes en la conversación activa cuando cambian
+  // (usar update funcional para evitar loops y estados stale)
   useEffect(() => {
-    if (activeConversation >= 0 && messages.length > 0) {
-      const updatedConversations = [...conversations];
-      updatedConversations[activeConversation] = {
-        ...updatedConversations[activeConversation],
-        messages: messages
+    if (activeConversation < 0) return;
+
+    setConversations((prev) => {
+      if (!prev[activeConversation]) return prev;
+      const next = [...prev];
+      next[activeConversation] = {
+        ...next[activeConversation],
+        messages: messages,
       };
-      setConversations(updatedConversations);
-    }
-  }, [messages, activeConversation, conversations]);
+      return next;
+    });
+  }, [messages, activeConversation]);
 
   const handleNewChat = () => {
     // Guardar la conversación actual si tiene mensajes
@@ -74,8 +78,48 @@ function App() {
     setMessages(conversations[index].messages || []);
   };
 
+  const handleDeleteConversation = async (index) => {
+    // Confirmar eliminación
+    if (!window.confirm('¿Estás seguro de que quieres borrar esta conversación?')) {
+      return;
+    }
+
+    // Si es la conversación activa, resetear
+    if (activeConversation === index) {
+      setActiveConversation(-1);
+      setMessages([]);
+    }
+
+    // Eliminar la conversación
+    const updatedConversations = conversations.filter((_, i) => i !== index);
+    setConversations(updatedConversations);
+
+    // Ajustar el índice activo si es necesario
+    if (activeConversation > index) {
+      setActiveConversation(activeConversation - 1);
+    }
+  };
+
+  const handleRenameConversation = (index, newTitle) => {
+    const title = (newTitle || '').trim();
+    if (!title) return;
+
+    const updatedConversations = [...conversations];
+    if (!updatedConversations[index]) return;
+
+    updatedConversations[index] = {
+      ...updatedConversations[index],
+      title,
+    };
+    setConversations(updatedConversations);
+  };
+
   const handleSendMessage = async (messageText) => {
     const userMessage = { sender: 'user', text: messageText };
+
+    // Historial *antes* de añadir el nuevo mensaje.
+    // El backend construye el contexto a partir de este historial.
+    const historyForBackend = activeConversation === -1 ? [] : messages;
 
     // Si no hay una conversación activa, crear una nueva primero
     if (activeConversation === -1) {
@@ -113,7 +157,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: messageText }),
+        body: JSON.stringify({ message: messageText, history: historyForBackend }),
       });
 
       if (!response.ok) {
@@ -142,6 +186,8 @@ function App() {
         activeConversation={activeConversation}
         onNewChat={handleNewChat}
         onSelectConversation={handleSelectConversation}
+        onDeleteConversation={handleDeleteConversation}
+        onRenameConversation={handleRenameConversation}
         userName={userName}
       />
       <ChatArea
