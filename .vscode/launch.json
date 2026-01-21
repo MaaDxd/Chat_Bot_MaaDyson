@@ -1,0 +1,13 @@
+{
+    "configurations": [
+        {
+            "name": "Chatbot",
+            "type": "debugpy",
+            "request": "launch",
+            "envFile": "${workspaceFolder}/.env",
+            "program": "${workspaceFolder}/backend/app.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        }
+    ]
+}

@@ -1,3 +1,4 @@
+import os
 import requests
 import json
 from flask import Flask, request, jsonify
@@ -6,13 +7,13 @@ from flask_cors import CORS
 # --- CONFIGURACIÓN INICIAL ---
 # En una app real, nunca pongas tu API Key directamente en el código.
 # Usa variables de entorno.
-API_KEY = "csk-8mydekmh6pwynjp4c8kte69xvp548jt5e9vtrtcp5868894m"
-CEREBRAS_URL = "https://api.cerebras.ai/v1/chat/completions"
+API_KEY = os.environ.get("API_KEY")
+CEREBRAS_URL = os.environ.get("CEREBRAS_URL")
 
 # --- CREAR LA APLICACIÓN DE FLASK ---
 app = Flask(__name__)
 # Habilitar CORS para todas las rutas
-CORS(app) 
+CORS(app)
 
 # --- HISTORIAL DE CONVERSACIÓN ---
 historial_conversacion = [
